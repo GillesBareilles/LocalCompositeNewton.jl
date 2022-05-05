@@ -9,7 +9,7 @@ function guessstruct_prox(pb::NSP.Eigmax, x, γ)
 
     # Codimension condition
     rmax = 0
-    while rmax*(rmax+1)/2-1 ≤ length(x)
+    while rmax * (rmax + 1) / 2 - 1 ≤ length(x)
         rmax += 1
     end
     rmax -= 1
@@ -21,16 +21,13 @@ function guessstruct_prox(pb::NSP.MaxQuadPb, x, γ)
     return NSP.MaxQuadManifold(pb, active_indices)
 end
 
-
-
-
 # Local Newton Method
 struct LocalCompositeNewtonOpt{Tf} <: NSS.NonSmoothOptimizer{Tf}
     start_it::Int64
     start_time::Float64
 end
 
-Base.@kwdef mutable struct LocalCompositeNewtonState{Tf, Tm} <: NSS.OptimizerState{Tf}
+Base.@kwdef mutable struct LocalCompositeNewtonState{Tf,Tm} <: NSS.OptimizerState{Tf}
     x::Vector{Tf}   # point
     it::Int64       # iteration
     M::Tm           # current manifold
@@ -40,15 +37,14 @@ end
 
 function initial_state(o::LocalCompositeNewtonOpt, xinit, pb)
     Minit = NSP.point_manifold(pb, xinit)
-    return LocalCompositeNewtonState(
-        x = xinit,
-        it = o.start_it,
-        M = NSP.point_manifold(pb, xinit),
-        γ = 100.,
-        di = DerivativeInfo(Minit, xinit)
+    return LocalCompositeNewtonState(;
+        x=xinit,
+        it=o.start_it,
+        M=NSP.point_manifold(pb, xinit),
+        γ=100.0,
+        di=DerivativeInfo(Minit, xinit),
     )
 end
-
 
 #
 ### Printing
@@ -91,13 +87,11 @@ function update_iterate!(state, ::LocalCompositeNewtonOpt, pb)
     # fixMaratos = false
     # fixMaratos && addMaratoscorrection!(d, pb, M, x, Jacₕ)
 
-    if F(pb, x+d) < F(pb, x)
+    if F(pb, x + d) < F(pb, x)
         state.x .+= d
     end
     state.M = M
 
-    return (;
-            :normd => norm(d),
-            :M => M,
-            ), norm(d) < 5e-14 ? NSS.problem_solved : NSS.iteration_completed
+    return (; :normd => norm(d), :M => M),
+    norm(d) < 5e-14 ? NSS.problem_solved : NSS.iteration_completed
 end

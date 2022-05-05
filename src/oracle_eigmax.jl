@@ -29,14 +29,13 @@ function ∇²ϕᵢⱼ!(res::Matrix{Tf}, map, E, λs, τ, x, i, j, m, r) where {
         η[k] = 1
 
         res[k, l] = E[:, i]' * ED.D²g_kl(map, x, k, l) * E[:, j]
-        for s in r+1:m
-            scalar = 0.5 * (1/(λs[i] - λs[s]) + 1/(λs[j] - λs[s]))
-            res[k, l] += scalar * (τ[i, s, k]*τ[j, s, l] + τ[i, s, l]*τ[j, s, k])
+        for s in (r + 1):m
+            scalar = 0.5 * (1 / (λs[i] - λs[s]) + 1 / (λs[j] - λs[s]))
+            res[k, l] += scalar * (τ[i, s, k] * τ[j, s, l] + τ[i, s, l] * τ[j, s, k])
         end
     end
-    return
+    return nothing
 end
-
 
 """
     $TYPEDSIGNATURES
@@ -63,7 +62,12 @@ BenchmarkTools.Trial: 367 samples with 1 evaluation.
 
  Memory estimate: 6.07 MiB, allocs estimate: 41129.
 """
-function oracles!(di::DerivativeInfo{Tf}, pb::NonSmoothProblems.Eigmax{Tf,EigenDerivatives.AffineMap{Tf}}, M, x::Vector{Tf}) where Tf
+function oracles!(
+    di::DerivativeInfo{Tf},
+    pb::NonSmoothProblems.Eigmax{Tf,EigenDerivatives.AffineMap{Tf}},
+    M,
+    x::Vector{Tf},
+) where {Tf}
     # Version using EigenDerivatives.jl
     map = pb.A
     eigmult = M.eigmult
@@ -73,11 +77,11 @@ function oracles!(di::DerivativeInfo{Tf}, pb::NonSmoothProblems.Eigmax{Tf,EigenD
 
     λs, E = eigen(gx)
     reverse!(λs)
-    reverse!(E, dims = 2)
+    reverse!(E; dims=2)
 
     # Update ref point
     eigmult.x̄ .= x
-    eigmult.Ē .= E[:, 1:eigmult.r]
+    eigmult.Ē .= E[:, 1:(eigmult.r)]
     U = eigmult.Ē
     # update_refpoint!(eigmult, A, x)
 
@@ -91,16 +95,20 @@ function oracles!(di::DerivativeInfo{Tf}, pb::NonSmoothProblems.Eigmax{Tf,EigenD
         t = @view di.Jacₕ[:, i]
         ED.hmat2vecsmall!(t, Dhmat, r)
     end
-    Jacₕ!(di.Jacₕ, eigmult, pb.A, x)
+    # Jacₕ!(di.Jacₕ, eigmult, pb.A, x)
 
     di.∇Fx .= 0
-    for l in axes(di.∇Fx, 1), i in 1:eigmult.r
+    for l in axes(di.∇Fx, 1), i in 1:(eigmult.r)
         di.∇Fx[l] += U[:, i]' * ED.Dg_l(map, x, l) * U[:, i]
     end
     di.∇Fx ./= eigmult.r
     # ∇F̃!(di.∇Fx, eigmult, pb.A, x)
 
     if length(di.λ) > 0
+        @show manifold_codim(M)
+
+        @show size(di.Jacₕ)
+        @show di.Jacₕ
         di.λ .= get_lambda(di.Jacₕ, di.∇Fx)
     end
 
@@ -127,7 +135,7 @@ function oracles!(di::DerivativeInfo{Tf}, pb::NonSmoothProblems.Eigmax{Tf,EigenD
 
         # ∇²ϕᵢⱼ!(temp, i, j)
         ∇²ϕᵢⱼ!(temp, map, E, λs, τ, x, i, j, m, r)
-        di.∇²Lx .+= - λᵢⱼ * temp
+        di.∇²Lx .+= -λᵢⱼ * temp
     end
     for l in ED.l_partialdiag(r)
         i, j = ED.l2ij(l, r)
@@ -135,14 +143,13 @@ function oracles!(di::DerivativeInfo{Tf}, pb::NonSmoothProblems.Eigmax{Tf,EigenD
 
         # ∇²ϕᵢⱼ!(temp, i, j)
         ∇²ϕᵢⱼ!(temp, map, E, λs, τ, x, i, j, m, r)
-        di.∇²Lx .+= (1/r - λᵢᵢ) * temp
+        di.∇²Lx .+= (1 / r - λᵢᵢ) * temp
     end
     i = j = r
 
     # ∇²ϕᵢⱼ!(temp, i, j)
     ∇²ϕᵢⱼ!(temp, map, E, λs, τ, x, i, j, m, r)
-    di.∇²Lx .+= (1/r + trλmult) * temp
-
+    di.∇²Lx .+= (1 / r + trλmult) * temp
 
     # display(di.∇²Lx[1:4, 1:4])
     return nothing

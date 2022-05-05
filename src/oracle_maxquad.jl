@@ -1,9 +1,9 @@
-function oracles!(di::DerivativeInfo{Tf}, pb::MaxQuadPb{Tf}, M, x::Vector{Tf}) where Tf
+function oracles!(di::DerivativeInfo{Tf}, pb::MaxQuadPb{Tf}, M, x::Vector{Tf}) where {Tf}
     di.x .= x
     p = manifold_codim(M)
-    m = p+1
+    m = p + 1
 
-    actindsbutone = @view M.active_fᵢ_indices[1:end-1]
+    actindsbutone = @view M.active_fᵢ_indices[1:(end - 1)]
     actindlast = M.active_fᵢ_indices[end]
 
     # h function
@@ -28,5 +28,5 @@ function oracles!(di::DerivativeInfo{Tf}, pb::MaxQuadPb{Tf}, M, x::Vector{Tf}) w
         di.∇²Lx .+= -di.λ[i] .* NSP.∇²gᵢ(pb, x, ind)
     end
     di.∇²Lx .+= (1 + sum(di.λ)) .* NSP.∇²gᵢ(pb, x, actindlast)
-    return
+    return nothing
 end

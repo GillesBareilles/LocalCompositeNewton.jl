@@ -1,4 +1,4 @@
-function get_SQP_direction_CG(pb, M, x::Vector{Tf}, derivativeinfo; info = Dict()) where Tf
+function get_SQP_direction_CG(pb, M, x::Vector{Tf}, derivativeinfo; info=Dict()) where {Tf}
     oracles!(derivativeinfo, pb, M, x)
 
     # hx, Jacₕ, ∇Fx, ∇²Lx = oracles(pb, x, M)
@@ -12,7 +12,7 @@ function get_SQP_direction_CG(pb, M, x::Vector{Tf}, derivativeinfo; info = Dict(
     v = -g - Z' * derivativeinfo.∇²Lx * r
 
     ## 3. Linear system solve
-    u= (Z' * derivativeinfo.∇²Lx * Z) \ v
+    u = (Z' * derivativeinfo.∇²Lx * Z) \ v
 
     d = r + Z * u
     return d
@@ -42,14 +42,16 @@ function get_SQP_direction_JuMP(pb, M, x::Vector; regularize=false)
     JuMP.optimize!(model)
     d = value.(d)
     if termination_status(model) != MathOptInterface.OPTIMAL
-        @warn "Problem in SQP direction computation" termination_status(model) primal_status(model) dual_status(model)
+        @warn "Problem in SQP direction computation" termination_status(model) primal_status(
+            model
+        ) dual_status(model)
         d .= 0
     end
 
     return d, Jacₕ
 end
 
-function addMaratoscorrection!(d::Vector{Tf}, pb, M, x, Jacₕ) where Tf
+function addMaratoscorrection!(d::Vector{Tf}, pb, M, x, Jacₕ) where {Tf}
     hxd = zeros(Tf, size(Jacₕ, 1))
     if isa(pb, Eigmax)
         haff!(hxd, M.eigmult, NSP.g(pb, x + d), x .+ d)
@@ -59,5 +61,5 @@ function addMaratoscorrection!(d::Vector{Tf}, pb, M, x, Jacₕ) where Tf
     dMaratos = IterativeSolvers.lsmr(Jacₕ, -hxd)
     @debug "Maratos SOC: " norm(hx + Jacₕ * dMaratos)
     @show norm(hxd + Jacₕ * d)
-    d .+= dMaratos
+    return d .+= dMaratos
 end

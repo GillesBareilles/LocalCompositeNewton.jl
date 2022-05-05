@@ -29,18 +29,17 @@ using DocStringExtensions
 
 using Infiltrator
 
-
 # Setting numerical experiments default output directory
-const NUMEXPS_OUTDIR_DEFAULT = joinpath(dirname(pathof(LocalCompositeNewton)), "..", "numexps_output")
+const NUMEXPS_OUTDIR_DEFAULT = joinpath(
+    dirname(pathof(LocalCompositeNewton)), "..", "numexps_output"
+)
 function __init__()
     if !isdir(NUMEXPS_OUTDIR_DEFAULT)
         mkdir(NUMEXPS_OUTDIR_DEFAULT)
     end
     @info "default output directory for numerical experiments is: " NUMEXPS_OUTDIR_DEFAULT
-    return
+    return nothing
 end
-
-
 
 include("prox_max.jl")
 include("oracles.jl")
