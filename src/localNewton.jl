@@ -1,22 +1,3 @@
-function guessstruct_prox(pb::NSP.Eigmax, x, γ)
-    Λ = eigvals(NSP.g(pb, x))
-    _, active_indices = prox_max(Λ, γ)
-    r = length(active_indices)
-
-    # Codimension condition
-    rmax = 0
-    while rmax * (rmax + 1) / 2 - 1 ≤ length(x)
-        rmax += 1
-    end
-    rmax -= 1
-
-    return EigmaxManifold(pb, min(rmax, r))
-end
-function guessstruct_prox(pb::NSP.MaxQuadPb, x, γ)
-    _, active_indices = prox_max(NSP.g(pb, x), γ)
-    return NSP.MaxQuadManifold(pb, active_indices)
-end
-
 # Local Newton Method
 struct LocalCompositeNewtonOpt{Tf} <: NSS.NonSmoothOptimizer{Tf}
     start_it::Int64
@@ -53,13 +34,6 @@ function display_logs_post(os, ::LocalCompositeNewtonOpt)
     @printf "%.3e   %s" os.additionalinfo.normd os.additionalinfo.M
 end
 
-function areequal(M::EigmaxManifold, N::EigmaxManifold)
-    return M.eigmult.r == N.eigmult.r
-end
-function areequal(M::MaxQuadManifold, N::MaxQuadManifold)
-    return M.active_fᵢ_indices == N.active_fᵢ_indices
-end
-
 function update_iterate!(state, ::LocalCompositeNewtonOpt, pb)
     x = state.x
 
@@ -73,15 +47,12 @@ function update_iterate!(state, ::LocalCompositeNewtonOpt, pb)
     end
 
     ## Step
-    # regularize = false
-    # d, Jacₕ = get_SQP_direction_JuMP(pb, M, x; regularize)
+    # d, Jacₕ = get_SQP_direction_JuMP(pb, M, x; regularize = false)
     info = Dict()
     d = get_SQP_direction_CG(pb, M, x, state.di; info)
 
     @warn "No Maratos"
-    # fixMaratos = true
-    # fixMaratos = false
-    # fixMaratos && addMaratoscorrection!(d, pb, M, x, Jacₕ)
+    # addMaratoscorrection!(d, pb, M, x, Jacₕ)
 
     if F(pb, x + d) < F(pb, x)
         state.x .+= d

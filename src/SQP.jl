@@ -1,7 +1,6 @@
 function get_SQP_direction_CG(pb, M, x::Vector{Tf}, derivativeinfo; info=Dict()) where {Tf}
     oracles!(derivativeinfo, pb, M, x)
 
-    # hx, Jacₕ, ∇Fx, ∇²Lx = oracles(pb, x, M)
     Z = nullspace(derivativeinfo.Jacₕ)         # tangent space basis
 
     ## 1. Restoration step
@@ -60,6 +59,5 @@ function addMaratoscorrection!(d::Vector{Tf}, pb, M, x, Jacₕ) where {Tf}
     end
     dMaratos = IterativeSolvers.lsmr(Jacₕ, -hxd)
     @debug "Maratos SOC: " norm(hx + Jacₕ * dMaratos)
-    @show norm(hxd + Jacₕ * d)
     return d .+= dMaratos
 end

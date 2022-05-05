@@ -45,6 +45,7 @@ include("prox_max.jl")
 include("oracles.jl")
 include("oracle_maxquad.jl")
 include("oracle_eigmax.jl")
+include("guessstructure.jl")
 
 include("SQP.jl")
 include("localNewton.jl")

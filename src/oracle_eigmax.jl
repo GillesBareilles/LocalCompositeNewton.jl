@@ -1,23 +1,3 @@
-# function oracles!(di::DerivativeInfo{Tf}, pb::NonSmoothProblems.Eigmax{Tf,EigenDerivatives.AffineMap{Tf}}, M, x::Vector{Tf}) where Tf
-#     # Version using EigenDerivatives.jl
-#     A = pb.A
-#     eigmult = M.eigmult
-#     update_refpoint!(eigmult, A, x)
-
-#     gx = NSP.g(pb, x)
-
-#     h!(di.hx, eigmult, x, gx)
-#     Jacₕ!(di.Jacₕ, eigmult, pb.A, x)
-#     ∇F̃!(di.∇Fx, eigmult, pb.A, x)
-
-#     if length(di.λ) > 0
-#         di.λ .= get_lambda(di.Jacₕ, di.∇Fx)
-#     end
-#     ∇²L!(di.∇²Lx, eigmult, A, x, di.λ, gx)
-
-#     return nothing
-# end
-
 const ED = EigenDerivatives
 
 function ∇²ϕᵢⱼ!(res::Matrix{Tf}, map, E, λs, τ, x, i, j, m, r) where {Tf}
@@ -82,7 +62,6 @@ function oracles!(
     eigmult.x̄ .= x
     eigmult.Ē .= E[:, 1:(eigmult.r)]
     U = eigmult.Ē
-    # update_refpoint!(eigmult, A, x)
     di.x .= x
 
     hmat = U' * gx * U
@@ -145,6 +124,5 @@ function oracles!(
     ∇²ϕᵢⱼ!(temp, map, E, λs, τ, x, i, j, m, r)
     di.∇²Lx .+= (1 / r + trλmult) * temp
 
-    # display(di.∇²Lx[1:4, 1:4])
     return nothing
 end
