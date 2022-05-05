@@ -1,7 +1,3 @@
-# function guess_prox_intermediatespace(pb::NSP.Eigmax, x, γ)
-#     _, active_indices = prox_max(eigvals(NSP.g(pb, x)), γ)
-#     return NSP.EigmaxManifold(pb, pb.m - minimum(active_indices) + 1)
-# end
 function guessstruct_prox(pb::NSP.Eigmax, x, γ)
     Λ = eigvals(NSP.g(pb, x))
     _, active_indices = prox_max(Λ, γ)

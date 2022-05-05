@@ -119,7 +119,7 @@ function expe_maxquad(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     #                   )
     # savefig(fig, joinpath(NUMEXPS_OUTDIR, "maxquadBGLS_it_subopt"))
 
-    return optimdata
+    return true
 end
 
 function treatproxsteps(pb, tr, Mopt::MaxQuadManifold, xopt)

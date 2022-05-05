@@ -9,7 +9,14 @@ end
 function DerivativeInfo(M, x::Vector{Tf}) where {Tf}
     n = length(x)
     p = manifold_codim(M)
-    return DerivativeInfo(zeros(n), zeros(p), zeros(p), zeros(p, n), zeros(n), zeros(n, n))
+    return DerivativeInfo(
+        zeros(Tf, n),
+        zeros(Tf, p),
+        zeros(Tf, p),
+        zeros(Tf, p, n),
+        zeros(Tf, n),
+        zeros(Tf, n, n),
+    )
 end
 
 # function oracles!(di::DerivativeInfo{Tf}, pb, M, x::Vector{Tf}) where {Tf}

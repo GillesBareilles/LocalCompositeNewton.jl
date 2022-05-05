@@ -68,7 +68,6 @@ function oracles!(
     M,
     x::Vector{Tf},
 ) where {Tf}
-    # Version using EigenDerivatives.jl
     map = pb.A
     eigmult = M.eigmult
     r = eigmult.r
@@ -84,6 +83,7 @@ function oracles!(
     eigmult.Ē .= E[:, 1:(eigmult.r)]
     U = eigmult.Ē
     # update_refpoint!(eigmult, A, x)
+    di.x .= x
 
     hmat = U' * gx * U
     ED.hmat2vecsmall!(di.hx, hmat, eigmult.r)
@@ -95,26 +95,20 @@ function oracles!(
         t = @view di.Jacₕ[:, i]
         ED.hmat2vecsmall!(t, Dhmat, r)
     end
-    # Jacₕ!(di.Jacₕ, eigmult, pb.A, x)
 
+    # Update current gradient
     di.∇Fx .= 0
     for l in axes(di.∇Fx, 1), i in 1:(eigmult.r)
         di.∇Fx[l] += U[:, i]' * ED.Dg_l(map, x, l) * U[:, i]
     end
     di.∇Fx ./= eigmult.r
-    # ∇F̃!(di.∇Fx, eigmult, pb.A, x)
 
+    # Update multiplier
     if length(di.λ) > 0
-        @show manifold_codim(M)
-
-        @show size(di.Jacₕ)
-        @show di.Jacₕ
         di.λ .= get_lambda(di.Jacₕ, di.∇Fx)
     end
 
-    # ∇²L!(di.∇²Lx, eigmult, map, x, di.λ, gx)
-    # display(di.∇²Lx[1:4, 1:4])
-
+    # Update Lagrangian hessian
     di.∇²Lx .= 0
     trλmult = sum(di.λ[ED.l_partialdiag(r)])
 
