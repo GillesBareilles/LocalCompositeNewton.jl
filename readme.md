@@ -6,3 +6,10 @@
 [![Coverage](https://codecov.io/gh/GillesBareilles/LocalCompositeNewton.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/GillesBareilles/LocalCompositeNewton.jl)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
+*Setup* is as follow:
+```julia
+]update
+]registry add https://github.com/GillesBareilles/OptimRegistry.jl
+]add https://github.com/GillesBareilles/LocalCompositeNewton.jl
+```
+
