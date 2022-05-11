@@ -35,7 +35,7 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     optimdata[o] = tr
 
     @show xfinal_nsbfgs
-    @show eigvals(g(pb, xfinal_nsbfgs))[end-10:end]
+    @show eigvals(g(pb, xfinal_nsbfgs))[(end - 10):end]
     # Local Newton method
     getx(o, os) = deepcopy(os.x)
     getγ(o, os) = deepcopy(os.γ)
@@ -47,15 +47,15 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     gx = eigvals(g(pb, x))
     γ = 0.0
     for i in 1:5
-        @show (gx[end-i+1] - gx[end-i]) * i
-        γ += (gx[end-i+1] - gx[end-i]) * i
+        @show (gx[end - i + 1] - gx[end - i]) * i
+        γ += (gx[end - i + 1] - gx[end - i]) * i
     end
     @show size(g(pb, x))
     @show guessstruct_prox(pb, x, γ)
-    @show guessstruct_prox(pb, x, γ-0.01)
-    @show guessstruct_prox(pb, x, γ+0.01)
-    @show guessstruct_prox(pb, x, γ+0.01)
-    @show guessstruct_prox(pb, x, γ/10)
+    @show guessstruct_prox(pb, x, γ - 0.01)
+    @show guessstruct_prox(pb, x, γ + 0.01)
+    @show guessstruct_prox(pb, x, γ + 0.01)
+    @show guessstruct_prox(pb, x, γ / 10)
     @show γ
 
     o = LocalCompositeNewtonOpt{Tf}(0, 0.0)
@@ -64,7 +64,9 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     )
     _ = NSS.optimize!(pb, o, x; optparams=optparams_precomp)
     state = initial_state(o, x, pb; γ)
-    xfinal_localNewton, tr = NSS.optimize!(pb, o, x; state, optparams, optimstate_extensions)
+    xfinal_localNewton, tr = NSS.optimize!(
+        pb, o, x; state, optparams, optimstate_extensions
+    )
     optimdata[o] = tr
 
     ## Build figures

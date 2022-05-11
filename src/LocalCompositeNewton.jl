@@ -58,6 +58,10 @@ include("problems/eigmax.jl")
 
 # include("problems/eigmax_nl_BigFloat.jl")
 
+
+include("makeplots.jl")
+
+
 export optimize!
 
 end # module

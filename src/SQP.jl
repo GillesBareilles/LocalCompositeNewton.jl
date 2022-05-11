@@ -53,7 +53,7 @@ end
 function addMaratoscorrection!(d::Vector{Tf}, pb, M, x, Jacₕ) where {Tf}
     hxd = zeros(Tf, size(Jacₕ, 1))
     if isa(pb, Eigmax)
-        h!(hxd, M.eigmult, x.+d, g(pb, x .+ d))
+        h!(hxd, M.eigmult, x .+ d, g(pb, x .+ d))
     else
         hxd = NSP.h(M, x .+ d)
     end
