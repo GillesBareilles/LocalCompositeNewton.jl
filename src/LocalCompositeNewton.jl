@@ -1,8 +1,8 @@
 module LocalCompositeNewton
 
-using MathOptInterface
-using JuMP
-using OSQP
+# using MathOptInterface
+# using JuMP
+# using OSQP
 using IterativeSolvers
 
 using LinearAlgebra
@@ -27,7 +27,7 @@ import PlotsOptim: get_legendname
 using LaTeXStrings
 using DocStringExtensions
 
-using Infiltrator
+# using Infiltrator
 
 # Setting numerical experiments default output directory
 const NUMEXPS_OUTDIR_DEFAULT = joinpath(
@@ -51,11 +51,11 @@ include("SQP.jl")
 include("localNewton.jl")
 
 include("runexps.jl")
+include("problems/makeplots.jl")
 
 include("problems/maxquadBGLS.jl")
-# include("problems/maxquadBGLS_BigFloat.jl")
 include("problems/eigmax.jl")
-# include("problems/eigmax_BigFloat.jl")
+
 # include("problems/eigmax_nl_BigFloat.jl")
 
 export optimize!

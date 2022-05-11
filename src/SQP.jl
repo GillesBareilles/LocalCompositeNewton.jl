@@ -17,43 +17,43 @@ function get_SQP_direction_CG(pb, M, x::Vector{Tf}, derivativeinfo; info=Dict())
     return d
 end
 
-function get_SQP_direction_JuMP(pb, M, x::Vector; regularize=false)
-    @assert manifold_codim(M) > 0
+# function get_SQP_direction_JuMP(pb, M, x::Vector; regularize=false)
+#     @assert manifold_codim(M) > 0
 
-    ## Oracle calls
-    n = length(x)
-    hx, Jacₕ, ∇Fx, λ, ∇²Lx = oracles(pb, x, M)
+#     ## Oracle calls
+#     n = length(x)
+#     hx, Jacₕ, ∇Fx, λ, ∇²Lx = oracles(pb, x, M)
 
-    model = Model(optimizer_with_attributes(OSQP.Optimizer, "polish" => true))
-    set_silent(model)
+#     model = Model(optimizer_with_attributes(OSQP.Optimizer, "polish" => true))
+#     set_silent(model)
 
-    d = @variable(model, d[1:n])
-    @constraint(model, hx + Jacₕ * d .== 0)
+#     d = @variable(model, d[1:n])
+#     @constraint(model, hx + Jacₕ * d .== 0)
 
-    if regularize
-        gradFx = ∇Fx - Jacₕ' * λ
-        ∇²Lx += ((norm(gradFx))^(0.8))I
-    end
+#     if regularize
+#         gradFx = ∇Fx - Jacₕ' * λ
+#         ∇²Lx += ((norm(gradFx))^(0.8))I
+#     end
 
-    @objective(model, Min, ∇Fx' * d + 0.5 * d' * ∇²Lx * d)
+#     @objective(model, Min, ∇Fx' * d + 0.5 * d' * ∇²Lx * d)
 
-    # @info "Solving for SQP step"
-    JuMP.optimize!(model)
-    d = value.(d)
-    if termination_status(model) != MathOptInterface.OPTIMAL
-        @warn "Problem in SQP direction computation" termination_status(model) primal_status(
-            model
-        ) dual_status(model)
-        d .= 0
-    end
+#     # @info "Solving for SQP step"
+#     JuMP.optimize!(model)
+#     d = value.(d)
+#     if termination_status(model) != MathOptInterface.OPTIMAL
+#         @warn "Problem in SQP direction computation" termination_status(model) primal_status(
+#             model
+#         ) dual_status(model)
+#         d .= 0
+#     end
 
-    return d, Jacₕ
-end
+#     return d, Jacₕ
+# end
 
 function addMaratoscorrection!(d::Vector{Tf}, pb, M, x, Jacₕ) where {Tf}
     hxd = zeros(Tf, size(Jacₕ, 1))
     if isa(pb, Eigmax)
-        haff!(hxd, M.eigmult, NSP.g(pb, x + d), x .+ d)
+        h!(hxd, M.eigmult, x.+d, g(pb, x .+ d))
     else
         hxd = NSP.h(M, x .+ d)
     end

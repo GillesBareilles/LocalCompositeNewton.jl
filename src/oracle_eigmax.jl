@@ -66,7 +66,7 @@ function oracles!(
 
     hmat = U' * gx * U
     ED.hmat2vecsmall!(di.hx, hmat, eigmult.r)
-    h!(di.hx, eigmult, x, gx)
+    # h!(di.hx, eigmult, x, gx)
 
     # Update Jacobian
     for i in axes(di.Jacₕ, 2)

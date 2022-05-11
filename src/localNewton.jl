@@ -12,13 +12,13 @@ Base.@kwdef mutable struct LocalCompositeNewtonState{Tf,Tm} <: NSS.OptimizerStat
     di::DerivativeInfo{Tf}
 end
 
-function initial_state(o::LocalCompositeNewtonOpt, xinit, pb)
+function initial_state(o::LocalCompositeNewtonOpt, xinit, pb; γ=100.0)
     Minit = NSP.point_manifold(pb, xinit)
     return LocalCompositeNewtonState(;
         x=xinit,
         it=o.start_it,
         M=NSP.point_manifold(pb, xinit),
-        γ=100.0,
+        γ,
         di=DerivativeInfo(Minit, xinit),
     )
 end
@@ -34,11 +34,11 @@ function display_logs_post(os, ::LocalCompositeNewtonOpt)
     @printf "%.3e   %s" os.additionalinfo.normd os.additionalinfo.M
 end
 
-function update_iterate!(state, ::LocalCompositeNewtonOpt, pb)
+function update_iterate!(state, ::LocalCompositeNewtonOpt{Tf}, pb) where {Tf}
     x = state.x
 
     ## Identification
-    state.γ /= 10
+    state.γ /= 2
     M = guessstruct_prox(pb, x, state.γ)
 
     if !areequal(M, state.M)
@@ -51,14 +51,16 @@ function update_iterate!(state, ::LocalCompositeNewtonOpt, pb)
     info = Dict()
     d = get_SQP_direction_CG(pb, M, x, state.di; info)
 
-    @warn "No Maratos"
-    # addMaratoscorrection!(d, pb, M, x, Jacₕ)
+    # @warn "No Maratos"
+    addMaratoscorrection!(d, pb, M, x, state.di.Jacₕ)
 
     if F(pb, x + d) < F(pb, x)
         state.x .+= d
+    else
+        @warn "not changing point" F(pb, x + d) F(pb, x)
     end
     state.M = M
 
     return (; :normd => norm(d), :M => M),
-    norm(d) < 5e-14 ? NSS.problem_solved : NSS.iteration_completed
+    norm(d) < 10 * eps(Tf) ? NSS.problem_solved : NSS.iteration_completed
 end

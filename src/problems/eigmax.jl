@@ -1,60 +1,12 @@
 function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
-    n = 20
-    m = 25
+    n = 25
+    m = 50
     pb = get_eigmax_affine(; m, n, seed=1864)
     x = zeros(n)
     Tf = Float64
 
-    xopt = [
-        -0.29065354221788825,
-        -0.5913012175150199,
-        0.024727781899874696,
-        -0.03725900302413318,
-        -0.05387465582448637,
-        -0.29513727892621694,
-        0.3456777615557909,
-        0.291710323463778,
-        0.12636034093320853,
-        -0.2743512897606581,
-        -0.7353088734430314,
-        0.5811490138599301,
-        -0.23867557186411822,
-        0.4768462996279805,
-        -0.4792234536201222,
-        0.1324053771135764,
-        -0.010353933273842373,
-        -0.8955538305001317,
-        0.032694439388782,
-        0.16534043275844432,
-    ]
-    # Fopt = F(pb, xopt) - 100 * eps(Tf)
-    Fopt = prevfloat(2.3299509821980916e+01)
-    Mopt = EigmaxManifold(pb, 4)
-    # Random.seed!(1643)
-    # x = xopt + randn(n) .* 1e-3
-    # @show x
-    x = [
-        -0.2903621117378083,
-        -0.5906936043347821,
-        0.022580009190398934,
-        -0.036962726426832536,
-        -0.05311102380035424,
-        -0.29609094669375197,
-        0.34511861687804846,
-        0.2917244946010309,
-        0.126235568114234,
-        -0.2749392842386973,
-        -0.7340388824944295,
-        0.5802709786578186,
-        -0.23976054387022805,
-        0.4780418928792374,
-        -0.4803760994489224,
-        0.1340455884010646,
-        -0.009960099075968799,
-        -0.8955982952380783,
-        0.03225246196467059,
-        0.16501043656163675,
-    ]
+    x = [0.18843321959369272, 0.31778063128576134, 0.34340066698932187, -0.27805652811628134, -0.1340243453861452, -0.12921798176305369, -0.5566692206939368, -0.6007421833719635, 0.05910386724008742, 0.17705864693916648, 0.08556420932871216, -0.026666254662448905, -0.23677377353260096, -0.48199437746045676, 0.06585075102257752, 0.04851608933735588, -0.3925094708809553, -0.24927524067693352, 0.5381266955502098, 0.2599737695610786, -0.5646166025020284, 0.1550051571713463, -0.2641217487440864, 0.3668468331373211, -0.2080390109713874]
+    x += 1e-3 * ones(n)
 
     optparams_precomp = OptimizerParams(;
         iterations_limit=2, trace_length=0, time_limit=0.5
@@ -65,7 +17,7 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     optimdata = OrderedDict()
 
     # Gradient sampling
-    o = GradientSampling(; m=5, β=1e-4)
+    o = GradientSampling(x)
     optparams = OptimizerParams(;
         iterations_limit=100, trace_length=50, time_limit=time_limit
     )
@@ -82,80 +34,45 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     xfinal_nsbfgs, tr = NSS.optimize!(pb, o, x; optparams)
     optimdata[o] = tr
 
+    @show xfinal_nsbfgs
+    @show eigvals(g(pb, xfinal_nsbfgs))[end-10:end]
     # Local Newton method
     getx(o, os) = deepcopy(os.x)
     getγ(o, os) = deepcopy(os.γ)
     optimstate_extensions = OrderedDict{Symbol,Function}(:x => getx, :γ => getγ)
 
+    # find the smaller γ which gives maximal structure
+    # Note that the maximum structure here is r=6 and not b=25.
+    # Indeed, the codimension of the structure manifold exceeds n=25 for r>6.
+    gx = eigvals(g(pb, x))
+    γ = 0.0
+    for i in 1:5
+        @show (gx[end-i+1] - gx[end-i]) * i
+        γ += (gx[end-i+1] - gx[end-i]) * i
+    end
+    @show size(g(pb, x))
+    @show guessstruct_prox(pb, x, γ)
+    @show guessstruct_prox(pb, x, γ-0.01)
+    @show guessstruct_prox(pb, x, γ+0.01)
+    @show guessstruct_prox(pb, x, γ+0.01)
+    @show guessstruct_prox(pb, x, γ/10)
+    @show γ
+
     o = LocalCompositeNewtonOpt{Tf}(0, 0.0)
     optparams = OptimizerParams(;
-        iterations_limit=5, trace_length=50, time_limit=time_limit
+        iterations_limit=10, trace_length=50, time_limit=time_limit
     )
     _ = NSS.optimize!(pb, o, x; optparams=optparams_precomp)
-    xfinal_localNewton, tr = NSS.optimize!(pb, o, x; optparams, optimstate_extensions)
+    state = initial_state(o, x, pb; γ)
+    xfinal_localNewton, tr = NSS.optimize!(pb, o, x; state, optparams, optimstate_extensions)
     optimdata[o] = tr
 
     ## Build figures
-    println("Building figures for Eigmax...")
+    xopt = xfinal_localNewton
+    Mopt = EigmaxManifold(pb, 3)
+    Fopt = prevfloat(F(pb, xopt))
 
-    stepinfo = treatproxsteps(pb, tr, Mopt, xopt)
+    buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, "eigmax"; NUMEXPS_OUTDIR)
 
-    optimdatagamma = OrderedDict(
-        L"\gamma low(x_k)" =>
-            [(itstepinfo.γlow, itstepinfo.distopt) for itstepinfo in stepinfo],
-        L"\bar{\gamma}(x_k)" =>
-            [(itstepinfo.γup, itstepinfo.distopt) for itstepinfo in stepinfo],
-        L"\gamma_k" => [(itstepinfo.γₖ, itstepinfo.distopt) for itstepinfo in stepinfo],
-    )
-    display(optimdatagamma)
-    getabsc_distopt(o, trace) = [o[2] for o in trace]
-    getord_gamma(o, trace) = [o[1] for o in trace]
-    fig = plot_curves(
-        optimdatagamma,
-        getabsc_distopt,
-        getord_gamma;
-        xlabel=L"\| x_k - x^\star\|",
-        ylabel=L"",
-        # nmarks = 1000,
-        xmode="log",
-    )
-    savefig(fig, joinpath(NUMEXPS_OUTDIR, "eigmax_gamma"))
-
-    # Suboptimality
-    getabsc_time(optimizer, trace) = [state.time for state in trace]
-    getord_subopt(optimizer, trace) = [state.Fx - Fopt for state in trace]
-    fig = plot_curves(
-        optimdata,
-        getabsc_time,
-        getord_subopt;
-        xlabel="time (s)",
-        ylabel=L"F(x_k) - F^\star",
-        nmarks=1000,
-    )
-    savefig(fig, joinpath(NUMEXPS_OUTDIR, "eigmax_time_subopt"))
-
-    # getabsc_it(optimizer, trace) = [state.it for state in trace]
-    # fig = plot_curves(optimdata, getabsc_it, getord_subopt;
-    #                   xlabel = "iteration",
-    #                   ylabel = L"F(x_k) - F^\star",
-    #                   nmarks = 1000,
-    #                   )
-    # savefig(fig, joinpath(NUMEXPS_OUTDIR, "eigmax_it_subopt"))
-    return nothing
-end
-
-function treatproxsteps(pb, tr, Mopt::EigmaxManifold, xopt)
-    stepinfo = Any[]
-    for os in tr[1:end]
-        x = os.additionalinfo.x
-        gx = eigvals(NSP.g(pb, x))
-
-        # Computing steps low, up
-        r = Mopt.eigmult.r
-        γlow, γup = get_γlowγupmax(gx, r)
-        γₖ = os.additionalinfo.γ
-        distopt = norm(x - xopt)
-        push!(stepinfo, (; γlow, γup, γₖ, distopt))
-    end
-    return stepinfo
+    return true
 end
