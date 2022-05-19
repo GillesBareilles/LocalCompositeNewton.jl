@@ -1,20 +1,9 @@
 function expe_maxquad(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     Tf = Float64
     pb = MaxQuadBGLS(Tf)
-    x = zeros(Tf, 10) .+ 1.0
 
-    x = [
-        0.1291708855755244,
-        0.04045443436441793,
-        -0.014620528767775722,
-        -0.02339789227333125,
-        -0.05965860244841998,
-        0.2688628230766436,
-        -0.07981011132211821,
-        -0.1383823364647686,
-        -0.08009288114659685,
-        -0.039024957152197254,
-    ]
+    x = [0.12625658077472543, 0.03437830256204086, 0.006857198326981548, -0.026360658246337897, -0.06729492268974148, 0.2783995007519937, -0.07421866454469361, -0.1385240478372969, -0.08403122312533247, -0.03858030977273088]
+    x .+= 1e-2 .* ones(Tf, 10)
 
     optparams_precomp = OptimizerParams(;
         iterations_limit=2, trace_length=0, time_limit=0.5
@@ -70,6 +59,7 @@ function expe_maxquad(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     Mopt = MaxQuadManifold(pb, [2, 3, 4, 5])
     Fopt = prevfloat(F(pb, xopt))
 
+    @show xopt
     buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, "maxquadBGLS"; NUMEXPS_OUTDIR)
     return true
 end

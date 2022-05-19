@@ -1,5 +1,13 @@
 const ED = EigenDerivatives
 
+function oracles_firstorder!(di::FirstOrderDerivativeInfo{Tf}, pb::Eigmax{Tf}, x) where Tf
+    di.x .= x
+    di.gx .= g(pb, x)
+    di.eigvals, di.eigvecs = eigen(di.gx)
+    di.Fx = maximum(di.eigvals)
+    return nothing
+end
+
 function ∇²ϕᵢⱼ!(res::Matrix{Tf}, map, E, λs, τ, x, i, j, m, r) where {Tf}
     n = length(x)
     res .= 0
@@ -42,8 +50,9 @@ BenchmarkTools.Trial: 367 samples with 1 evaluation.
 
  Memory estimate: 6.07 MiB, allocs estimate: 41129.
 """
-function oracles!(
-    di::DerivativeInfo{Tf},
+function oracles_structure!(
+    di_struct::StructDerivativeInfo{Tf},
+    di_fo::FirstOrderDerivativeInfo{Tf},
     pb::NonSmoothProblems.Eigmax{Tf,EigenDerivatives.AffineMap{Tf}},
     M,
     x::Vector{Tf},
@@ -52,9 +61,9 @@ function oracles!(
     eigmult = M.eigmult
     r = eigmult.r
 
-    gx = ED.g(map, x)
+    gx = di_fo.gx
+    λs, E = di_fo.eigvals, di_fo.eigvecs
 
-    λs, E = eigen(gx)
     reverse!(λs)
     reverse!(E; dims=2)
 
@@ -62,34 +71,34 @@ function oracles!(
     eigmult.x̄ .= x
     eigmult.Ē .= E[:, 1:(eigmult.r)]
     U = eigmult.Ē
-    di.x .= x
+    di_struct.x .= x
 
     hmat = U' * gx * U
-    ED.hmat2vecsmall!(di.hx, hmat, eigmult.r)
-    # h!(di.hx, eigmult, x, gx)
+    ED.hmat2vecsmall!(di_struct.hx, hmat, eigmult.r)
+    # h!(di_struct.hx, eigmult, x, gx)
 
     # Update Jacobian
-    for i in axes(di.Jacₕ, 2)
+    for i in axes(di_struct.Jacₕ, 2)
         Dhmat = U' * ED.Dg_l(map, x, i) * U
-        t = @view di.Jacₕ[:, i]
+        t = @view di_struct.Jacₕ[:, i]
         ED.hmat2vecsmall!(t, Dhmat, r)
     end
 
     # Update current gradient
-    di.∇Fx .= 0
-    for l in axes(di.∇Fx, 1), i in 1:(eigmult.r)
-        di.∇Fx[l] += U[:, i]' * ED.Dg_l(map, x, l) * U[:, i]
+    di_struct.∇Fx .= 0
+    for l in axes(di_struct.∇Fx, 1), i in 1:(eigmult.r)
+        di_struct.∇Fx[l] += U[:, i]' * ED.Dg_l(map, x, l) * U[:, i]
     end
-    di.∇Fx ./= eigmult.r
+    di_struct.∇Fx ./= eigmult.r
 
     # Update multiplier
-    if length(di.λ) > 0
-        di.λ .= get_lambda(di.Jacₕ, di.∇Fx)
+    if length(di_struct.λ) > 0
+        di_struct.λ .= get_lambda(di_struct.Jacₕ, di_struct.∇Fx)
     end
 
     # Update Lagrangian hessian
-    di.∇²Lx .= 0
-    trλmult = sum(di.λ[ED.l_partialdiag(r)])
+    di_struct.∇²Lx .= 0
+    trλmult = sum(di_struct.λ[ED.l_partialdiag(r)])
 
     m = size(gx, 1)
     n = length(x)
@@ -104,25 +113,25 @@ function oracles!(
     temp = zeros(Tf, n, n)
     for l in ED.l_lowerdiag(r)
         i, j = ED.l2ij(l, r)
-        λᵢⱼ = di.λ[l]
+        λᵢⱼ = di_struct.λ[l]
 
         # ∇²ϕᵢⱼ!(temp, i, j)
         ∇²ϕᵢⱼ!(temp, map, E, λs, τ, x, i, j, m, r)
-        di.∇²Lx .+= -λᵢⱼ * temp
+        di_struct.∇²Lx .+= -λᵢⱼ * temp
     end
     for l in ED.l_partialdiag(r)
         i, j = ED.l2ij(l, r)
-        λᵢᵢ = di.λ[l]
+        λᵢᵢ = di_struct.λ[l]
 
         # ∇²ϕᵢⱼ!(temp, i, j)
         ∇²ϕᵢⱼ!(temp, map, E, λs, τ, x, i, j, m, r)
-        di.∇²Lx .+= (1 / r - λᵢᵢ) * temp
+        di_struct.∇²Lx .+= (1 / r - λᵢᵢ) * temp
     end
     i = j = r
 
     # ∇²ϕᵢⱼ!(temp, i, j)
     ∇²ϕᵢⱼ!(temp, map, E, λs, τ, x, i, j, m, r)
-    di.∇²Lx .+= (1 / r + trλmult) * temp
+    di_struct.∇²Lx .+= (1 / r + trλmult) * temp
 
     return nothing
 end

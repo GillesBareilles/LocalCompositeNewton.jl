@@ -1,17 +1,15 @@
-function get_SQP_direction_CG(pb, M, x::Vector{Tf}, derivativeinfo; info=Dict()) where {Tf}
-    oracles!(derivativeinfo, pb, M, x)
-
-    Z = nullspace(derivativeinfo.Jacₕ)         # tangent space basis
+function get_SQP_direction_CG(pb, M, x::Vector{Tf}, structderivative; info=Dict()) where {Tf}
+    Z = nullspace(structderivative.Jacₕ)         # tangent space basis
 
     ## 1. Restoration step
-    r = IterativeSolvers.lsmr(derivativeinfo.Jacₕ, -derivativeinfo.hx)
+    r = IterativeSolvers.lsmr(structderivative.Jacₕ, -structderivative.hx)
 
     ## 2. Reduced gradient and RHS
-    g = Z' * derivativeinfo.∇Fx
-    v = -g - Z' * derivativeinfo.∇²Lx * r
+    g = Z' * structderivative.∇Fx
+    v = -g - Z' * structderivative.∇²Lx * r
 
     ## 3. Linear system solve
-    u = (Z' * derivativeinfo.∇²Lx * Z) \ v
+    u = (Z' * structderivative.∇²Lx * Z) \ v
 
     d = r + Z * u
     return d

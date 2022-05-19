@@ -25,7 +25,7 @@ function treatproxsteps(pb, tr, Mopt::EigmaxManifold, xopt)
     end
     return stepinfo
 end
-function treatproxsteps(pb, tr, Mopt::MaxQuadManifold, xopt)
+function treatproxsteps(pb, tr, Mopt::MaxQuadManifold, xopt::Vector{Tf}) where Tf
     stepinfo = Any[]
     for os in tr[1:end]
         x = os.additionalinfo.x
@@ -36,6 +36,7 @@ function treatproxsteps(pb, tr, Mopt::MaxQuadManifold, xopt)
         γlow, γup = get_γlowγupmax(gx, r)
         γₖ = os.additionalinfo.γ
         distopt = norm(x - xopt)
+        distopt == 0 && (distopt = eps(Tf))
         push!(stepinfo, (; γlow, γup, γₖ, distopt))
     end
     return stepinfo
