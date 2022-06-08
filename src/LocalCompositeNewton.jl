@@ -27,7 +27,6 @@ import PlotsOptim: get_legendname
 using LaTeXStrings
 using DocStringExtensions
 
-
 # Setting numerical experiments default output directory
 const NUMEXPS_OUTDIR_DEFAULT = joinpath(
     dirname(pathof(LocalCompositeNewton)), "..", "numexps_output"

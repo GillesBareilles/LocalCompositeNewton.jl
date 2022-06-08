@@ -1,11 +1,19 @@
-function oracles_firstorder!(di::FirstOrderDerivativeInfo{Tf}, pb::MaxQuadPb{Tf}, x) where Tf
+function oracles_firstorder!(
+    di::FirstOrderDerivativeInfo{Tf}, pb::MaxQuadPb{Tf}, x
+) where {Tf}
     di.x .= x
     di.gx .= g(pb, x)
     di.Fx = maximum(di.gx)
     return nothing
 end
 
-function oracles_structure!(di::StructDerivativeInfo{Tf}, ::FirstOrderDerivativeInfo{Tf}, pb::MaxQuadPb{Tf}, M, x::Vector{Tf}) where {Tf}
+function oracles_structure!(
+    di::StructDerivativeInfo{Tf},
+    ::FirstOrderDerivativeInfo{Tf},
+    pb::MaxQuadPb{Tf},
+    M,
+    x::Vector{Tf},
+) where {Tf}
     di.x .= x
     p = manifold_codim(M)
     m = p + 1

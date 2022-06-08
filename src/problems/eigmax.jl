@@ -71,7 +71,7 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     gx = eigvals(g(pb, x))
     γ = 0.0
     for i in 1:5
-        @show (gx[end - i + 1] - gx[end - i]) * i
+        # @show (gx[end - i + 1] - gx[end - i]) * i
         γ += (gx[end - i + 1] - gx[end - i]) * i
     end
     # @show size(g(pb, x))

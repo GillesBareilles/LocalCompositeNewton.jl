@@ -1,6 +1,6 @@
 const ED = EigenDerivatives
 
-function oracles_firstorder!(di::FirstOrderDerivativeInfo{Tf}, pb::Eigmax{Tf}, x) where Tf
+function oracles_firstorder!(di::FirstOrderDerivativeInfo{Tf}, pb::Eigmax{Tf}, x) where {Tf}
     di.x .= x
     di.gx .= g(pb, x)
     di.eigvals, di.eigvecs = eigen(di.gx)

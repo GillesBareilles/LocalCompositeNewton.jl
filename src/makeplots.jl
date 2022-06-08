@@ -25,7 +25,7 @@ function treatproxsteps(pb, tr, Mopt::EigmaxManifold, xopt)
     end
     return stepinfo
 end
-function treatproxsteps(pb, tr, Mopt::MaxQuadManifold, xopt::Vector{Tf}) where Tf
+function treatproxsteps(pb, tr, Mopt::MaxQuadManifold, xopt::Vector{Tf}) where {Tf}
     stepinfo = Any[]
     for os in tr[1:end]
         x = os.additionalinfo.x
@@ -65,7 +65,7 @@ function buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, pbname::String; NUMEX
             [(itstepinfo.γup, itstepinfo.distopt) for itstepinfo in stepinfo],
         L"\gamma_k" => [(itstepinfo.γₖ, itstepinfo.distopt) for itstepinfo in stepinfo],
     )
-    display(optimdatagamma)
+
     getabsc_distopt(o, trace) = [o[2] for o in trace]
     getord_gamma(o, trace) = [o[1] for o in trace]
     fig = plot_curves(

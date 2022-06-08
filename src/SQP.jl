@@ -1,4 +1,6 @@
-function get_SQP_direction_CG(pb, M, x::Vector{Tf}, structderivative; info=Dict()) where {Tf}
+function get_SQP_direction_CG(
+    pb, M, x::Vector{Tf}, structderivative; info=Dict()
+) where {Tf}
     Z = nullspace(structderivative.Jacₕ)         # tangent space basis
 
     ## 1. Restoration step

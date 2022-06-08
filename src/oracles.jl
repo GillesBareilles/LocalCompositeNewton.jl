@@ -1,4 +1,4 @@
-mutable struct FirstOrderDerivativeInfo{Tf, Tgx}
+mutable struct FirstOrderDerivativeInfo{Tf,Tgx}
     x::Vector{Tf}
     Fx::Tf
     gx::Tgx
@@ -9,11 +9,7 @@ function FirstOrderDerivativeInfo(pb, x::Vector{Tf}) where {Tf}
     n = length(x)
     gx = g(pb, x)
     return FirstOrderDerivativeInfo(
-        zeros(Tf, n),
-        Tf(0),
-        similar(gx),
-        zeros(Tf, size(gx, 1)),
-        zeros(Tf, n, n),
+        zeros(Tf, n), Tf(0), similar(gx), zeros(Tf, size(gx, 1)), zeros(Tf, n, n)
     )
 end
 
@@ -53,15 +49,16 @@ function StructDerivativeInfo(M, x::Vector{Tf}) where {Tf}
     )
 end
 
-
-function oracles_firstorder!(di::FirstOrderDerivativeInfo{Tf}, pb, x) where Tf
+function oracles_firstorder!(di::FirstOrderDerivativeInfo{Tf}, pb, x) where {Tf}
     @info "calling generic firstorder oracle"
     di.x .= x
     di.gx .= g(pb, x)
-    di.Fx = F(pb, x)
+    return di.Fx = F(pb, x)
 end
 
-function oracles_structure!(di::StructDerivativeInfo{Tf}, ::FirstOrderDerivativeInfo{Tf}, pb, M, x::Vector{Tf}) where {Tf}
+function oracles_structure!(
+    di::StructDerivativeInfo{Tf}, ::FirstOrderDerivativeInfo{Tf}, pb, M, x::Vector{Tf}
+) where {Tf}
     @info "calling generic structure oracle"
     di.x .= x
 

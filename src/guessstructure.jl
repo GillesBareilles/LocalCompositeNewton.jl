@@ -5,7 +5,9 @@ function areequal(M::MaxQuadManifold, N::MaxQuadManifold)
     return M.active_fᵢ_indices == N.active_fᵢ_indices
 end
 
-function guessstruct_prox(pb::NSP.Eigmax, firstorderderivatives::FirstOrderDerivativeInfo, γ)
+function guessstruct_prox(
+    pb::NSP.Eigmax, firstorderderivatives::FirstOrderDerivativeInfo, γ
+)
     _, active_indices = prox_max(firstorderderivatives.eigvals, γ)
     r = length(active_indices)
 
@@ -20,8 +22,9 @@ function guessstruct_prox(pb::NSP.Eigmax, firstorderderivatives::FirstOrderDeriv
     return EigmaxManifold(pb, min(rmax, r))
 end
 
-
-function guessstruct_prox(pb::NSP.MaxQuadPb, firstorderderivatives::FirstOrderDerivativeInfo, γ)
+function guessstruct_prox(
+    pb::NSP.MaxQuadPb, firstorderderivatives::FirstOrderDerivativeInfo, γ
+)
     _, active_indices = prox_max(firstorderderivatives.gx, γ)
     return NSP.MaxQuadManifold(pb, active_indices)
 end

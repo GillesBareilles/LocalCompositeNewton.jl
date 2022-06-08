@@ -14,16 +14,18 @@ Base.@kwdef mutable struct LocalCompositeNewtonState{Tf,Tm} <: NSS.OptimizerStat
     di_struct::StructDerivativeInfo{Tf}
 end
 
-function initial_state(o::LocalCompositeNewtonOpt, xinit::Vector{Tf}, pb; γ=100.0) where {Tf}
+function initial_state(
+    o::LocalCompositeNewtonOpt, xinit::Vector{Tf}, pb; γ=100.0
+) where {Tf}
     Minit = NSP.point_manifold(pb, xinit)
     state = LocalCompositeNewtonState(;
-        x         = xinit,
-        it        = o.start_it,
-        M         = NSP.point_manifold(pb, xinit),
-        γ         = Tf(γ),
-        di_fo     = FirstOrderDerivativeInfo(pb, xinit),
-        di_fonext = FirstOrderDerivativeInfo(pb, xinit),
-        di_struct = StructDerivativeInfo(Minit, xinit),
+        x=xinit,
+        it=o.start_it,
+        M=NSP.point_manifold(pb, xinit),
+        γ=Tf(γ),
+        di_fo=FirstOrderDerivativeInfo(pb, xinit),
+        di_fonext=FirstOrderDerivativeInfo(pb, xinit),
+        di_struct=StructDerivativeInfo(Minit, xinit),
     )
     oracles_firstorder!(state.di_fo, pb, xinit)
     return state
@@ -62,7 +64,7 @@ function update_iterate!(state, ::LocalCompositeNewtonOpt{Tf}, pb) where {Tf}
     # @warn "No Maratos"
     addMaratoscorrection!(d, pb, M, x, state.di_struct.Jacₕ)
 
-    oracles_firstorder!(state.di_fonext, pb, state.x+d)
+    oracles_firstorder!(state.di_fonext, pb, state.x + d)
     Fxd = state.di_fonext.Fx
     if Fxd < Fx
         state.x .+= d
