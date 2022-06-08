@@ -3,4 +3,5 @@
 *.log
 tmp/
 
-numexps_output
+numexps_output/
+Manifest.toml

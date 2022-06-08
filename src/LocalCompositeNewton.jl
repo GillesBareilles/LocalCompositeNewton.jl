@@ -48,14 +48,12 @@ include("guessstructure.jl")
 include("SQP.jl")
 include("localNewton.jl")
 
+# Float64 experiments
 include("problems/maxquadBGLS.jl")
 include("problems/eigmax.jl")
-
-# include("problems/maxquadBGLS_BigFloat.jl")
-# include("problems/eigmax_BigFloat.jl")
-
-# include("problems/eigmax_p12.jl")
-# include("problems/eigmax_nl_BigFloat.jl")
+# BigFloat experiments
+include("problems/maxquadBGLS_BigFloat.jl")
+include("problems/eigmax_BigFloat.jl")
 
 include("makeplots.jl")
 

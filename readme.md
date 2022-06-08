@@ -8,14 +8,21 @@
 
 *Setup* is as follow:
 ```julia
-]update
-]registry add https://github.com/GillesBareilles/OptimRegistry.jl
-]add https://github.com/GillesBareilles/LocalCompositeNewton.jl
+using Pkg
+Pkg.update()
+Pkg.Registry.add(RegistrySpec(url = "https://github.com/GillesBareilles/OptimRegistry.jl"))
+Pkg.add(url = "https://github.com/GillesBareilles/LocalCompositeNewton.jl", rev="master")
 ```
 
 Experiments are executed with the commands:
 ```julia
 using LocalCompositeNewton
+
+# Float64 experiments
 LocalCompositeNewton.expe_maxquad()
 LocalCompositeNewton.expe_eigmax()
+
+# BigFloat experiments
+LocalCompositeNewton.expe_maxquad_BigFloat()
+LocalCompositeNewton.expe_eigmax_BigFloat()
 ```
