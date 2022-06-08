@@ -52,9 +52,11 @@ include("localNewton.jl")
 include("problems/maxquadBGLS.jl")
 include("problems/eigmax.jl")
 
-include("problems/maxquadBGLS_BigFloat.jl")
-include("problems/eigmax_BigFloat.jl")
+# include("problems/maxquadBGLS_BigFloat.jl")
+# include("problems/eigmax_BigFloat.jl")
 
+# include("problems/eigmax_p12.jl")
+# include("problems/eigmax_nl_BigFloat.jl")
 
 include("makeplots.jl")
 
