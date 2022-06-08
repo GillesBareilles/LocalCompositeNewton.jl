@@ -22,7 +22,7 @@ function expe_maxquad(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
 
     # nsBFGS
     o = NSBFGS{Tf}(; ϵ_opt=1e-15)
-    optparams = OptimizerParams(; iterations_limit=300, trace_length=50, time_limit)
+    optparams = OptimizerParams(; iterations_limit=700, trace_length=50, time_limit)
     _ = NSS.optimize!(pb, o, x; optparams=optparams_precomp)
     xfinal_nsbfgs, tr = NSS.optimize!(pb, o, x; optparams)
     optimdata[o] = tr

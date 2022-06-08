@@ -13,3 +13,9 @@
 ]add https://github.com/GillesBareilles/LocalCompositeNewton.jl
 ```
 
+Experiments are executed with the commands:
+```julia
+using LocalCompositeNewton
+LocalCompositeNewton.expe_maxquad()
+LocalCompositeNewton.expe_eigmax()
+```
