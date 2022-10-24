@@ -8,7 +8,8 @@ end
 function FirstOrderDerivativeInfo(pb, x::Vector{Tf}) where {Tf}
     n = length(x)
     gx = g(pb, x)
-    return FirstOrderDerivativeInfo(
+    Tgx = typeof(gx)
+    return FirstOrderDerivativeInfo{Tf, Tgx}(
         zeros(Tf, n), Tf(0), similar(gx), zeros(Tf, size(gx, 1)), zeros(Tf, n, n)
     )
 end
