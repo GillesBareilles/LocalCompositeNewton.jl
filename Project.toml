@@ -17,12 +17,12 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
-julia = "1.7"
-NonSmoothProblems = "0.1.1"
 EigenDerivatives = "v0.1.1"
 IterativeSolvers = "v0.9.2"
+NonSmoothProblems = "0.1.1"
 NonSmoothSolvers = "v0.1.1"
 PlotsOptim = "v0.1.0"
+julia = "1.7"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
