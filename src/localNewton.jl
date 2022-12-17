@@ -1,16 +1,17 @@
 # Local Newton Method
-struct LocalCompositeNewtonOpt{Tf} <: NSS.NonSmoothOptimizer{Tf}
-    start_it::Int64
-    start_time::Float64
+Base.@kwdef struct LocalCompositeNewtonOpt{Tf} <: NSS.NonSmoothOptimizer{Tf}
+    start_it::Int64 = 0
+    start_time::Float64 = 0.0
+    decreasefactor::Float64 = 2.0
 end
 
-Base.@kwdef mutable struct LocalCompositeNewtonState{Tf,Tm} <: NSS.OptimizerState{Tf}
+Base.@kwdef mutable struct LocalCompositeNewtonState{Tf,Tm,Tgx} <: NSS.OptimizerState{Tf}
     x::Vector{Tf} # point
     it::Int64     # iteration
     M::Tm         # current manifold
     γ::Tf         # current step
-    di_fo::FirstOrderDerivativeInfo{Tf}
-    di_fonext::FirstOrderDerivativeInfo{Tf}
+    di_fo::FirstOrderDerivativeInfo{Tf, Tgx}
+    di_fonext::FirstOrderDerivativeInfo{Tf, Tgx}
     di_struct::StructDerivativeInfo{Tf}
 end
 
@@ -19,7 +20,7 @@ function initial_state(
 ) where {Tf}
     Minit = NSP.point_manifold(pb, xinit)
     state = LocalCompositeNewtonState(;
-        x=xinit,
+        x=copy(xinit),
         it=o.start_it,
         M=NSP.point_manifold(pb, xinit),
         γ=Tf(γ),
@@ -42,16 +43,16 @@ function display_logs_post(os, ::LocalCompositeNewtonOpt)
     @printf "%.3e   %s" os.additionalinfo.normd os.additionalinfo.M
 end
 
-function update_iterate!(state, ::LocalCompositeNewtonOpt{Tf}, pb) where {Tf}
+function update_iterate!(state::LocalCompositeNewtonState{Tf,Tm}, opt::LocalCompositeNewtonOpt{Tf}, pb) where {Tf, Tm}
     x = state.x
     Fx = state.di_fo.Fx
 
     ## Identification
-    state.γ /= 2
+    state.γ /= opt.decreasefactor
     M = guessstruct_prox(pb, state.di_fo, state.γ)
 
     if !areequal(M, state.M)
-        @info "changing manifolds" M state.M
+        # @info "changing manifolds" M state.M
         state.di_struct = StructDerivativeInfo(M, x)
     end
 
@@ -71,8 +72,8 @@ function update_iterate!(state, ::LocalCompositeNewtonOpt{Tf}, pb) where {Tf}
 
         update_difirstorder!(state)
         state.di_fonext = state.di_fo
-    else
-        @warn "not changing point" Fxd Fx
+    # else
+    #     @warn "not changing point" Fxd Fx
     end
     state.M = M
 

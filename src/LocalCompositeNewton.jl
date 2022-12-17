@@ -43,6 +43,7 @@ include("prox_max.jl")
 include("oracles.jl")
 include("oracle_maxquad.jl")
 include("oracle_eigmax.jl")
+include("oracle_MCPLeastSquares.jl")
 include("guessstructure.jl")
 
 include("SQP.jl")
@@ -54,6 +55,10 @@ include("problems/eigmax.jl")
 # BigFloat experiments
 include("problems/maxquadBGLS_BigFloat.jl")
 include("problems/eigmax_BigFloat.jl")
+# Nonconvex experiments
+include("problems/nonconvex_maxquad.jl")
+include("problems/nonconvex_MCP.jl")
+
 
 include("makeplots.jl")
 

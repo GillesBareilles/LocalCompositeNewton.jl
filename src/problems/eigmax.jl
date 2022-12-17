@@ -61,8 +61,8 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     optimdata[o] = tr
 
     # Local Newton method
-    getx(o, os) = deepcopy(os.x)
-    getγ(o, os) = deepcopy(os.γ)
+    getx(o, os, optimstate_additionalinfo) = deepcopy(os.x)
+    getγ(o, os, optimstate_additionalinfo) = deepcopy(os.γ)
     optimstate_extensions = OrderedDict{Symbol,Function}(:x => getx, :γ => getγ)
 
     # find the smaller γ which gives maximal structure
@@ -74,15 +74,8 @@ function expe_eigmax(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
         # @show (gx[end - i + 1] - gx[end - i]) * i
         γ += (gx[end - i + 1] - gx[end - i]) * i
     end
-    # @show size(g(pb, x))
-    # @show guessstruct_prox(pb, x, γ)
-    # @show guessstruct_prox(pb, x, γ - 0.01)
-    # @show guessstruct_prox(pb, x, γ + 0.01)
-    # @show guessstruct_prox(pb, x, γ + 0.01)
-    # @show guessstruct_prox(pb, x, γ / 10)
-    # @show γ
 
-    o = LocalCompositeNewtonOpt{Tf}(0, 0.0)
+    o = LocalCompositeNewtonOpt{Tf}()
     optparams = OptimizerParams(;
         iterations_limit=6, trace_length=50, time_limit=time_limit
     )

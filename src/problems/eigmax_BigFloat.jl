@@ -61,29 +61,21 @@ function expe_eigmax_BigFloat(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     optimdata[o] = tr
 
     # Local Newton method
-    getx(o, os) = deepcopy(os.x)
-    getγ(o, os) = deepcopy(os.γ)
+    getx(o, os, optimstate_additionalinfo) = deepcopy(os.x)
+    getγ(o, os, optimstate_additionalinfo) = deepcopy(os.γ)
     optimstate_extensions = OrderedDict{Symbol,Function}(:x => getx, :γ => getγ)
 
     # find the smaller γ which gives maximal structure
     # Note that the maximum structure here is r=6 and not b=25.
     # Indeed, the codimension of the structure manifold exceeds n=25 for r>6.
-    gx = eigvals(g(pb, x))
-    γ = 0.0
+    gx = sort!(eigvals(g(pb, x))) # HACK: values are not sorted for BigFloat type with julia 1.8.3
+    γ = Tf(0.0)
     for i in 1:6
         @show (gx[end - i + 1] - gx[end - i]) * i
         γ += (gx[end - i + 1] - gx[end - i]) * i
     end
-    # @show gx[end - 4:end]
-    # @show guessstruct_prox(pb, x, γ)
-    # @show guessstruct_prox(pb, x, γ - 0.01)
-    # @show guessstruct_prox(pb, x, γ)
-    # @show guessstruct_prox(pb, x, γ + 0.01)
-    # @show guessstruct_prox(pb, x, γ / 10)
-    # @show γ
-    # γ *= 2
 
-    o = LocalCompositeNewtonOpt{Tf}(0, 0.0)
+    o = LocalCompositeNewtonOpt{Tf}()
     optparams = OptimizerParams(;
         iterations_limit=10, trace_length=50, time_limit=time_limit
     )

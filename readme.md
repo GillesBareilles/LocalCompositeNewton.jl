@@ -25,4 +25,9 @@ LocalCompositeNewton.expe_eigmax()
 # BigFloat experiments
 LocalCompositeNewton.expe_maxquad_BigFloat()
 LocalCompositeNewton.expe_eigmax_BigFloat()
+
+# Additional experiments with nonconvex functions (not in paper)
+LocalCompositeNewton.expe_nonconvex_maxquad()
+LocalCompositeNewton.expe_nonconvex_MCP()
+
 ```

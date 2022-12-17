@@ -1,21 +1,16 @@
-function expe_maxquad_BigFloat(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
-    Tf = BigFloat
-    pb = MaxQuadBGLS(Tf)
-    # x = zeros(Tf, 10) .+ 1.0
+function expe_nonconvex_maxquad(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
+    Tf = Float64
+    n = 50
 
-    x = BigFloat[
-        0.1262565807610255445185179672585653584266799011761391068030613140161575044921407,
-        0.03437830256097890704051252130186747265414216053032158387085577917658060836438285,
-        0.00685719836779687427825948734161445053288243455223652272329090200614780597917616,
-        -0.02636065820494096094609872850478543540617664857926117605680110401019568120571228,
-        -0.06729492270868006593536380517000718723176441530271898158742984678710444333790462,
-        0.2783995007541536495680073389703896098041667741271222704810012994401216165592615,
-        -0.07421866452333002987978647728762983359129255712282503412231953553997394268371833,
-        -0.1385240478296728974544121542500292231851791141986074340874637974995779468755006,
-        -0.08403122315682629669364179873407886367397270685886949091426946545541491579349118,
-        -0.03858030979552272014360079500149203641502234120798212060288844780395701918134798,
-    ]
-    x .+= 1e-2 .* ones(Tf, 10)
+    b = zeros(n)
+    b[1] = -1
+    pb = MaxQuadPb{Tf}(2, 2,
+        Vector{Matrix{Tf}}([Diagonal(0.5 .* ones(n)), Diagonal(-0.5 * ones(n))]),
+        Vector{Vector{Tf}}([zeros(n), b]),
+        Vector{Tf}([0, 2])
+    )
+    x = zeros(n)
+    x[1] = 3
 
     optparams_precomp = OptimizerParams(;
         iterations_limit=2, trace_length=0, time_limit=0.5
@@ -23,7 +18,7 @@ function expe_maxquad_BigFloat(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
 
     ## Define solvers to be run on problem
     optimdata = OrderedDict()
-    time_limit = 0.1
+    time_limit = 0.004
 
     # Gradient sampling
     o = GradientSampling(x)
@@ -34,7 +29,7 @@ function expe_maxquad_BigFloat(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
 
     # nsBFGS
     o = NSBFGS{Tf}(; ϵ_opt=1e-15)
-    optparams = OptimizerParams(; iterations_limit=300, trace_length=50, time_limit)
+    optparams = OptimizerParams(; iterations_limit=700, trace_length=50, time_limit)
     _ = NSS.optimize!(pb, o, x; optparams=optparams_precomp)
     xfinal_nsbfgs, tr = NSS.optimize!(pb, o, x; optparams)
     optimdata[o] = tr
@@ -50,6 +45,7 @@ function expe_maxquad_BigFloat(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
     for i in 1:(length(gx) - 1)
         γ += (gx[end - i + 1] - gx[end - i]) * i
     end
+    γ *= 2
 
     o = LocalCompositeNewtonOpt{Tf}()
     optparams = OptimizerParams(; iterations_limit=5, trace_length=50, time_limit)
@@ -62,12 +58,9 @@ function expe_maxquad_BigFloat(NUMEXPS_OUTDIR=NUMEXPS_OUTDIR_DEFAULT)
 
     ## Build figures
     xopt = xfinal_localNewton
-    Mopt = MaxQuadManifold(pb, [2, 3, 4, 5])
+    Mopt = MaxQuadManifold(pb, [1, 2])
     Fopt = prevfloat(F(pb, xopt))
-    # @show xopt
 
-    buildfigures(
-        optimdata, tr, pb, xopt, Mopt, Fopt, "maxquadBGLS_BigFloat"; NUMEXPS_OUTDIR
-    )
+    buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, "nonconvex-maxquad"; NUMEXPS_OUTDIR, plotgamma = false)
     return true
 end

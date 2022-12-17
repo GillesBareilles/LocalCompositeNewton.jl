@@ -53,32 +53,34 @@ function get_γlowγupmax(gx, r)
     return γlow, γup
 end
 
-function buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, pbname::String; NUMEXPS_OUTDIR)
+function buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, pbname::String; NUMEXPS_OUTDIR, plotgamma = true, includelegend = false)
     @info "building figures for $pbname"
 
-    stepinfo = treatproxsteps(pb, tr, Mopt, xopt)
+    if plotgamma
+        stepinfo = treatproxsteps(pb, tr, Mopt, xopt)
 
-    optimdatagamma = OrderedDict(
-        L"\gamma low(x_k)" =>
-            [(itstepinfo.γlow, itstepinfo.distopt) for itstepinfo in stepinfo],
-        L"\bar{\gamma}(x_k)" =>
-            [(itstepinfo.γup, itstepinfo.distopt) for itstepinfo in stepinfo],
-        L"\gamma_k" => [(itstepinfo.γₖ, itstepinfo.distopt) for itstepinfo in stepinfo],
-    )
+        optimdatagamma = OrderedDict(
+            L"\gamma low(x_k)" =>
+                [(itstepinfo.γlow, itstepinfo.distopt) for itstepinfo in stepinfo],
+            L"\bar{\gamma}(x_k)" =>
+                [(itstepinfo.γup, itstepinfo.distopt) for itstepinfo in stepinfo],
+            L"\gamma_k" => [(itstepinfo.γₖ, itstepinfo.distopt) for itstepinfo in stepinfo],
+        )
 
-    getabsc_distopt(o, trace) = [o[2] for o in trace]
-    getord_gamma(o, trace) = [o[1] for o in trace]
-    fig = plot_curves(
-        optimdatagamma,
-        getabsc_distopt,
-        getord_gamma;
-        xlabel=L"\| x_k - x^\star\|",
-        ylabel=L"",
-        # nmarks = 1000,
-        xmode="log",
-        includelegend=false,
-    )
-    savefig(fig, joinpath(NUMEXPS_OUTDIR, pbname * "_gamma"))
+        getabsc_distopt(o, trace) = [o[2] for o in trace]
+        getord_gamma(o, trace) = [o[1] for o in trace]
+        fig = plot_curves(
+            optimdatagamma,
+            getabsc_distopt,
+            getord_gamma;
+            xlabel=L"\| x_k - x^\star\|",
+            ylabel=L"",
+            # nmarks = 1000,
+            xmode="log",
+            includelegend=false,
+        )
+        savefig(fig, joinpath(NUMEXPS_OUTDIR, pbname * "_gamma"))
+    end
 
     # Suboptimality
     getabsc_time(optimizer, trace) = [state.time for state in trace]
@@ -90,7 +92,7 @@ function buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, pbname::String; NUMEX
         xlabel="time (s)",
         ylabel=L"F(x_k) - F^\star",
         nmarks=1000,
-        includelegend=false,
+        includelegend,
     )
     return savefig(fig, joinpath(NUMEXPS_OUTDIR, pbname * "_time_subopt"))
 end

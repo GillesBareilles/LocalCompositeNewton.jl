@@ -4,7 +4,10 @@ function get_SQP_direction_CG(
     Z = nullspace(structderivative.Jacₕ)         # tangent space basis
 
     ## 1. Restoration step
-    r = IterativeSolvers.lsmr(structderivative.Jacₕ, -structderivative.hx)
+    r = zeros(Tf, size(x))
+    if norm(structderivative.hx) > 1e1 * eps(Tf)
+        r = IterativeSolvers.lsmr(structderivative.Jacₕ, -structderivative.hx)
+    end
 
     ## 2. Reduced gradient and RHS
     g = Z' * structderivative.∇Fx
@@ -57,7 +60,9 @@ function addMaratoscorrection!(d::Vector{Tf}, pb, M, x, Jacₕ) where {Tf}
     else
         hxd = NSP.h(M, x .+ d)
     end
+    norm(hxd) < 1e1 * eps(Tf) && return
     dMaratos = IterativeSolvers.lsmr(Jacₕ, -hxd)
     @debug "Maratos SOC: " norm(hx + Jacₕ * dMaratos)
-    return d .+= dMaratos
+    d .+= dMaratos
+    return
 end
