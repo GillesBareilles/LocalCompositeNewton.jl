@@ -1,7 +1,7 @@
 name = "LocalCompositeNewton"
 uuid = "8d4dcc58-3161-4603-87cb-6c574b0842d7"
 authors = ["Gilles Bareilles <gilles.bareilles@protonmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
