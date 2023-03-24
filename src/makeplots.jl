@@ -94,5 +94,10 @@ function buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, pbname::String; NUMEX
         nmarks=1000,
         includelegend,
     )
-    return savefig(fig, joinpath(NUMEXPS_OUTDIR, pbname * "_time_subopt"))
+    try
+        savefig(fig, joinpath(NUMEXPS_OUTDIR, pbname * "_time_subopt"))
+    catch e
+        @warn "Error while building figure" e
+    end
+    return true
 end
