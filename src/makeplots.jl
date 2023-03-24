@@ -79,7 +79,11 @@ function buildfigures(optimdata, tr, pb, xopt, Mopt, Fopt, pbname::String; NUMEX
             xmode="log",
             includelegend=false,
         )
-        savefig(fig, joinpath(NUMEXPS_OUTDIR, pbname * "_gamma"))
+        try
+            savefig(fig, joinpath(NUMEXPS_OUTDIR, pbname * "_gamma"))
+        catch e
+            @warn "Error while building figure" e
+        end
     end
 
     # Suboptimality
